@@ -33,7 +33,7 @@ public class TSHingeJoint : TrueSyncBehaviour
     [SerializeField]
     Vector3 anchor;
     [SerializeField]
-    TSVector Axis;
+    Vector3 Axis;
     [SerializeField]
     bool useLimits = false;
     [SerializeField]
@@ -44,8 +44,9 @@ public class TSHingeJoint : TrueSyncBehaviour
     SpringElements Spring;
     [SerializeField]
     FP breakForce=FP.PositiveInfinity;
+    TSVector TSWorldAxis;
 
-    
+
 
     public override void OnSyncedStart()
     {
@@ -55,11 +56,15 @@ public class TSHingeJoint : TrueSyncBehaviour
         
         Vector3 worldPos = transform.TransformPoint(anchor);
         TSVector TSworldPos = worldPos.ToTSVector();
+        
+        Vector3 worldAxis = transform.TransformDirection(Axis);
+        TSWorldAxis = worldAxis.ToTSVector();
+
 
         if (useLimits)
-            thisJoint = new LimitedHingeJoint(PhysicsWorldManager.instance.GetWorld(), body1, body2, TSworldPos, Axis, -Limits.Min,Limits.Max);
+            thisJoint = new LimitedHingeJoint(PhysicsWorldManager.instance.GetWorld(), body1, body2, TSworldPos, TSWorldAxis, -Limits.Min,Limits.Max);
         else
-            thisJoint= new MyHingeJoint(PhysicsWorldManager.instance.GetWorld(), body1, body2, TSworldPos, Axis);
+            thisJoint= new MyHingeJoint(PhysicsWorldManager.instance.GetWorld(), body1, body2, TSworldPos, TSWorldAxis);
 
         thisJoint.Activate();
     }
@@ -69,7 +74,7 @@ public class TSHingeJoint : TrueSyncBehaviour
         if (useSpring)
         {
             //Adding a spring and damper Term to the Equation of Motion 
-            thisBody.AddTorque((-1) * Axis * ((thisJoint.getHingeAngle()-Spring.tagetPosition) * Spring.spring + thisJoint.getAngularVel() * Spring.damper));
+            thisBody.AddTorque((-1) *TSWorldAxis * ((thisJoint.getHingeAngle()-Spring.tagetPosition) * Spring.spring + thisJoint.getAngularVel() * Spring.damper));
         }        
 
         if (TSMath.Abs(thisJoint.AppliedImpulse) >= breakForce)//@TODO: Add break torque
